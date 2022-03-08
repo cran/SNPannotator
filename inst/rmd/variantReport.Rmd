@@ -1,0 +1,354 @@
+---
+title: "InSilico Sequencing Report "
+subtitle: "<h4>SNPannotator package</h4>"
+output: 
+  html_document:
+    css: style.css
+---
+
+---
+
+
+
+
+```{r , echo=FALSE,results='asis',fig.width=10}
+
+varCount = max(output$`#gSNP`)
+
+
+makeReport_LD <- function(var.data) {
+
+  # find unique gene names  
+  genes=var.data$Gene
+  genes= strsplit(trimws(genes), ",\\s*")
+  genes =unlist(genes)
+  genes = gsub(x = genes,pattern = '(.+)(\\(.+\\))',replacement = '\\1')
+  genes= paste(sort(unique(genes)),collapse = ', ')
+  
+  # associations
+  assoc=var.data$Associations
+  assoc= strsplit(trimws(assoc), ",\\s*")
+  assoc =sort(unique(unlist(assoc)))
+  
+# report
+  gsnp.data = var.data[gSNP == Linked_SNP,]
+  # starting <div>
+  cat(sprintf('<div id="variant%s">',gsnp.data$`#gSNP`))
+  
+  cat(sprintf('<span class="topic">Variant ID:</span> <span class="value">%s</span><br/>', gsnp.data$gSNP))
+  cat(sprintf('<span class="topic">Position: </span> <span class="value">%s:%s (%s)</span><br/>', gsnp.data$Chr, gsnp.data$Pos_37, gsnp.data$Cytoband))
+  cat(sprintf('<span class="topic">Alleles: </span> <span class="value">%s (%s)</span><br/>', gsnp.data$`Alleles in population`, gsnp.data$`Allele frequencies`))
+  cat(sprintf('<span class="topic">Type: </span> <span class="value">%s</span><br/>', tools::toTitleCase(gsub(x =  gsnp.data$Type,pattern = '_',replacement = ' '))))
+  cat(sprintf('<span class="topic">Variants in high LD: </span> <span class="value">%s </span><br/>', nrow(var.data)-1))
+
+  
+  cat('<br/><span class="topic">Associated genes</span>')
+  cat(kableExtra::kable(genes,format = 'html',col.names = NULL))
+  
+  
+  
+  
+  if(length(assoc) > 15 & length(assoc) %% 2 == 0)
+  {
+    assoc=cbind(assoc[1:(length(assoc)/2)],
+                assoc[((length(assoc)/2) +1 ):length(assoc)])
+  } else if (length(assoc) > 15 & length(assoc) %% 2 != 0)
+  {
+    assoc=cbind(assoc[1:(ceiling(length(assoc)/2))],
+                c(assoc[(ceiling((length(assoc)/2))+1):length(assoc)],''))
+  }
+  
+  if(length(assoc)>1)
+  {
+    
+  cat('<br/><span class="topic">Associated phenotypes</span>')
+  cat(kableExtra::kable(assoc,format = 'html', col.names = NULL,booktabs = TRUE) %>% 
+		kableExtra::kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"), 
+		full_width = F, 
+		position = "left")) 
+  
+  }
+  
+  cat('<br/>')
+  
+  cat(kableExtra::kable(var.data[,.N,by=Type],format = 'html',col.names = c('type','count'),caption = '<span class="topic">Variant types</span>')%>% 
+		kableExtra::kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"), 
+		full_width = F, 
+		position = "left") %>%
+		kableExtra::column_spec(1, bold = TRUE, border_right = TRUE,width="15em") %>%
+		kableExtra::column_spec(2, width="10em")) 
+  
+  
+  cat('<br/>')
+
+    cat('<br/>')
+  if(var.data[gSNP!=Linked_SNP & Type=='missense_variant',.N] > 0)
+    cat(kableExtra::kable(var.data[gSNP!=Linked_SNP & Type=='missense_variant', list(Linked_SNP,LD,Gene)],format = 'html',col.names = c('rsID','LD','Gene'),caption = '<span class="topic">Missense variants</span>')%>% 
+		kableExtra::kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"), 
+		full_width = F, 
+		position = "left") %>%
+		kableExtra::column_spec(1, bold = TRUE, border_right = TRUE,width="10em") %>%
+		kableExtra::column_spec(2, width="10em", border_right = TRUE,extra_css = 'text-align:left;') %>%
+		kableExtra::column_spec(3, width="15em")) 
+  
+  
+  cat('<br/>')
+  cat('<br/>')
+  
+  if(nrow(var.data) > 1)
+  {
+    mis.var <- var.data[gSNP!=Linked_SNP & Type=='missense_variant',.N] > 0
+    
+    plot(
+      ggplot2::ggplot() + 
+        ggplot2::geom_point(data = var.data[gSNP!=Linked_SNP & Type!='missense_variant',],mapping =  aes(x=Pos_37 , y=LD,color=LD),size=3) +  
+        ggplot2::geom_point(data = var.data[gSNP!=Linked_SNP & Type=='missense_variant',],mapping =  aes(x=Pos_37 , y=LD),size=3,shape=10,color='black',stroke=1.5) +  
+        ggplot2::geom_text(data = var.data[gSNP!=Linked_SNP & Type=='missense_variant',],
+                           mapping = aes(x=Pos_37 , y=LD,label=Linked_SNP),
+                           hjust=-.3) +  
+        ggplot2::geom_point(data = var.data[gSNP==Linked_SNP,],mapping = aes(x=Pos_37 , y=LD),
+                            color='black',shape=17,size=4) +
+        ggplot2::labs(title = "Regional plot", x = "Position",y= expression(LD (R^2))) + 
+        ggplot2::scale_y_continuous(limits = c(r2 ,1.035))+
+        ggplot2::scale_x_continuous(limits = c(gsnp.data$Pos_37-(window_size*1000) ,gsnp.data$Pos_37+(window_size*1000)))+
+        ggplot2::scale_color_gradient2(low = "darkblue",mid = "orange",high = "darkred",midpoint = ((1+r2)/2), limits=c(r2,1)) +
+      ggplot2::annotate(geom='text',x=gsnp.data$Pos_37,y=1.035,label=gsnp.data$gSNP) + {
+        if(mis.var)
+          ggplot2::annotate(geom='text',x=gsnp.data$Pos_37+420000,y=.98,label='missense variant')
+      }+{
+        if(mis.var)
+          ggplot2::geom_point(aes(x=gsnp.data$Pos_37+320000, y= 0.975),size=3,shape=10,color='black',stroke=1.5) 
+      }+{
+        if(mis.var)  
+          ggplot2::geom_rect(mapping=aes(xmin = gsnp.data$Pos_37+300000,
+                                         xmax = gsnp.data$Pos_37+500000,
+                                         ymin=.95,
+                                         ymax=1),color='black',alpha=0) 
+      }+
+      ggplot2::theme_light() +
+      ggplot2::theme(legend.position = c(0.1,0.7)))
+  }
+
+  cat('</div><br/><br/><br/><hr/>')
+}
+
+makeReport_CADD <- function(var.data) {
+
+  
+  # find unique gene names  
+  genes=var.data$Gene
+  genes= strsplit(trimws(genes), ",\\s*")
+  genes =unlist(genes)
+  genes = gsub(x = genes,pattern = '(.+)(\\(.+\\))',replacement = '\\1')
+  genes= paste(sort(unique(genes)),collapse = ', ')
+  
+  # associations
+  assoc=var.data$Associations
+  assoc= strsplit(trimws(assoc), ",\\s*")
+  assoc =sort(unique(unlist(assoc)))
+  
+  # check if CADD score exists and correct it
+  has.cadd <- FALSE
+  max.cadd <- NULL
+  
+  if(is.element('cadd',names(var.data)))
+  {
+    var.data[,cadd.score := ifelse(!grepl(x = cadd,pattern = ','),
+                                  sub(x = cadd,pattern = "(.+) = (.+)",replacement = '\\2'),
+                                   NA),
+             by=Linked_SNP]
+    
+    var.data$cadd.score <- as.numeric(var.data$cadd.score)
+    
+    has.cadd <- TRUE
+    max.cadd <- max(var.data$cadd.score,na.rm = TRUE)
+  }
+  
+# report
+  gsnp.data = var.data[gSNP == Linked_SNP,]
+  # starting <div>
+  cat(sprintf('<div id="variant%s">',gsnp.data$`#gSNP`))
+  
+  cat(sprintf('<span class="topic">Variant ID:</span> <span class="value">%s</span><br/>', gsnp.data$gSNP))
+  cat(sprintf('<span class="topic">Position: </span> <span class="value">%s:%s (%s)</span><br/>', gsnp.data$Chr, gsnp.data$Pos_37, gsnp.data$Cytoband))
+  cat(sprintf('<span class="topic">Alleles: </span> <span class="value">%s (%s)</span><br/>', gsnp.data$`Alleles in population`, gsnp.data$`Allele frequencies`))
+  cat(sprintf('<span class="topic">Type: </span> <span class="value">%s</span><br/>', tools::toTitleCase(gsub(x =  gsnp.data$Type,pattern = '_',replacement = ' '))))
+  cat(sprintf('<span class="topic">Variants in high LD: </span> <span class="value">%s </span><br/>', nrow(var.data)-1))
+
+  
+  cat('<br/><span class="topic">Associated genes</span>')
+  cat(kableExtra::kable(genes,format = 'html',col.names = NULL))
+  
+  
+  
+  
+  if(length(assoc) > 15 & length(assoc) %% 2 == 0)
+  {
+    assoc=cbind(assoc[1:(length(assoc)/2)],
+                assoc[((length(assoc)/2) +1 ):length(assoc)])
+  } else if (length(assoc) > 15 & length(assoc) %% 2 != 0)
+  {
+    assoc=cbind(assoc[1:(ceiling(length(assoc)/2))],
+                c(assoc[(ceiling((length(assoc)/2))+1):length(assoc)],''))
+  }
+  
+  if(length(assoc)>1)
+  {
+    
+  cat('<br/><span class="topic">Associated phenotypes</span>')
+  cat(kableExtra::kable(assoc,format = 'html', col.names = NULL,booktabs = TRUE) %>% 
+		kableExtra::kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"), 
+		full_width = F, 
+		position = "left")) 
+  
+  }
+  
+  cat('<br/>')
+  
+  cat(kableExtra::kable(var.data[,.N,by=Type],format = 'html',col.names = c('type','count'),caption = '<span class="topic">Variant types</span>')%>% 
+		kableExtra::kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"), 
+		full_width = F, 
+		position = "left") %>%
+		kableExtra::column_spec(1, bold = TRUE, border_right = TRUE,width="15em") %>%
+		kableExtra::column_spec(2, width="10em")) 
+  
+  
+  cat('<br/>')
+
+  if(var.data[gSNP!=Linked_SNP & Type=='missense_variant',.N] > 0)
+    cat(kableExtra::kable(var.data[gSNP!=Linked_SNP & Type=='missense_variant', list(Linked_SNP,LD,Gene)],format = 'html',col.names = c('rsID','LD','Gene'),caption = '<span class="topic">Missense variants</span>')%>% 
+		kableExtra::kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"), 
+		full_width = F, 
+		position = "left") %>%
+		kableExtra::column_spec(1, bold = TRUE, border_right = TRUE,width="10em") %>%
+		kableExtra::column_spec(2, width="10em", border_right = TRUE,extra_css = 'text-align:left;') %>%
+		kableExtra::column_spec(3, width="15em")) 
+  
+  cat('<br/>')
+  
+  
+  if(has.cadd)
+    cat(kableExtra::kable(head(var.data[order(cadd.score,decreasing = TRUE),list(Linked_SNP,cadd,LD,Gene)]),format = 'html',col.names = c('rsID','CADD score','LD','Gene'),caption = '<span class="topic">Most deleterious variants</span>')%>% 
+          kableExtra::kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"), 
+                                    full_width = F, 
+                                    position = "left") %>%
+          kableExtra::column_spec(1, bold = TRUE, border_right = TRUE,width="10em") %>%
+          kableExtra::column_spec(2, width="10em", border_right = TRUE,extra_css = 'text-align:left;') %>%
+          kableExtra::column_spec(3, width="10em", border_right = TRUE,extra_css = 'text-align:left;') %>%
+          kableExtra::column_spec(4, width="15em")) 
+  
+  cat('<br/>')
+  cat('<br/>')
+  
+  if(nrow(var.data) > 1)
+  {
+    mis.var <- var.data[gSNP!=Linked_SNP & Type=='missense_variant',.N] > 0
+    
+    if(has.cadd)
+    {
+      plot(
+        ggplot2::ggplot() + 
+          ggplot2::geom_point(data = var.data[gSNP!=Linked_SNP & Type!='missense_variant',],mapping =  aes(x=Pos_37 , y=LD,color=cadd.score),size=3) +  
+          ggplot2::geom_point(data = var.data[gSNP!=Linked_SNP & Type=='missense_variant',],mapping =  aes(x=Pos_37 , y=LD),size=3,shape=10,color='black',stroke=1.5) +  
+          ggplot2::geom_text(data = var.data[gSNP!=Linked_SNP & Type=='missense_variant',],
+                             mapping = aes(x=Pos_37 , y=LD,label=Linked_SNP),
+                             hjust=-.3) +  
+          ggplot2::geom_point(data = var.data[gSNP==Linked_SNP,],mapping = aes(x=Pos_37 , y=LD),
+                              color='black',shape=17,size=4) +
+          ggplot2::labs(title = "Regional plot", x = "Position",y= expression(LD (R^2))) + 
+          ggplot2::scale_y_continuous(limits = c(r2 ,1.035))+
+          ggplot2::scale_x_continuous(limits = c(gsnp.data$Pos_37-(window_size*1000) ,gsnp.data$Pos_37+(window_size*1000)))+
+          ggplot2::scale_color_gradient2(low = "darkblue",mid = "orange",high = "darkred",midpoint = (max.cadd/2), limits=c(0,max.cadd)) +
+          ggplot2::annotate(geom='text',x=gsnp.data$Pos_37,y=1.035,label=gsnp.data$gSNP) + {
+            if(mis.var)
+              ggplot2::annotate(geom='text',x=gsnp.data$Pos_37+420000,y=.98,label='missense variant')
+          }+{
+            if(mis.var)
+              ggplot2::geom_point(aes(x=gsnp.data$Pos_37+320000, y= 0.975),size=3,shape=10,color='black',stroke=1.5) 
+          }+{
+            if(mis.var)  
+              ggplot2::geom_rect(mapping=aes(xmin = gsnp.data$Pos_37+300000,
+                                             xmax = gsnp.data$Pos_37+500000,
+                                             ymin=.95,
+                                             ymax=1),color='black',alpha=0) 
+          }+
+          ggplot2::theme_light() +
+          ggplot2::theme(legend.position = c(0.1,0.7))+
+          ggplot2::labs(color=("CADD score")))
+    }
+    else
+    {
+      plot(
+        ggplot2::ggplot() + 
+          ggplot2::geom_point(data = var.data[gSNP!=Linked_SNP & Type!='missense_variant',],mapping =  aes(x=Pos_37 , y=LD,color=LD),size=3) +  
+          ggplot2::geom_point(data = var.data[gSNP!=Linked_SNP & Type=='missense_variant',],mapping =  aes(x=Pos_37 , y=LD),size=3,shape=10,color='black',stroke=1.5) +  
+          ggplot2::geom_text(data = var.data[gSNP!=Linked_SNP & Type=='missense_variant',],
+                             mapping = aes(x=Pos_37 , y=LD,label=Linked_SNP),
+                             hjust=-.3) +  
+          ggplot2::geom_point(data = var.data[gSNP==Linked_SNP,],mapping = aes(x=Pos_37 , y=LD),
+                              color='black',shape=17,size=4) +
+          ggplot2::labs(title = "Regional plot", x = "Position",y= expression(LD (R^2))) + 
+          ggplot2::scale_y_continuous(limits = c(r2 ,1.035))+
+          ggplot2::scale_x_continuous(limits = c(gsnp.data$Pos_37-(window_size*1000) ,gsnp.data$Pos_37+(window_size*1000)))+
+          ggplot2::scale_color_gradient2(low = "darkblue",mid = "orange",high = "darkred",midpoint = ((1+r2)/2), limits=c(r2,1)) +
+          ggplot2::annotate(geom='text',x=gsnp.data$Pos_37,y=1.035,label=gsnp.data$gSNP) + {
+            if(mis.var)
+              ggplot2::annotate(geom='text',x=gsnp.data$Pos_37+420000,y=.98,label='missense variant')
+          }+{
+            if(mis.var)
+              ggplot2::geom_point(aes(x=gsnp.data$Pos_37+320000, y= 0.975),size=3,shape=10,color='black',stroke=1.5) 
+          }+{
+            if(mis.var)  
+              ggplot2::geom_rect(mapping=aes(xmin = gsnp.data$Pos_37+300000,
+                                             xmax = gsnp.data$Pos_37+500000,
+                                             ymin=.95,
+                                             ymax=1),color='black',alpha=0) 
+          }+
+          ggplot2::theme_light() +
+          ggplot2::theme(legend.position = c(0.1,0.7)))
+    }
+    
+  }
+  
+  cat('</div><br/><br/><br/><hr/>')
+}
+
+
+
+vt=output[,.N-1,by=list(gSNP)]
+
+vt[,link := sprintf('<li><a href="#variant%s">%s</a></li>', .I , gSNP)]
+vt <- vt[,c(3,1)]
+
+# cat(kableExtra::kable(vt,format = 'html',col.names = c('RSID','variants in high LD'))%>% 
+# 	kableExtra::kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"), 
+# 	full_width = F, 
+# 	position = "left")) 
+
+cat('<b>Search parameters:</b>\n',fill=TRUE)
+cat('<b>Server:</b> ',sub(x = server,pattern = 'https?://',replacement = ''),'\n',fill=TRUE)
+cat('<b>population:</b> ',db,'\n',fill=TRUE)
+cat('<b>R2:</b> ',r2,'\n',fill=TRUE)
+cat('<b>Window-size:</b> ',window_size,'Kb\n',fill=TRUE)
+cat('<hr/>')
+
+
+cat('The following variants were searched in Ensembl database.\n')
+cat('<ol>')
+cat(vt$link)
+cat('</ol>')
+
+cat('<hr/>')
+
+  
+for(i in seq_len(varCount))
+{
+  var.data = output[`#gSNP` == i,]
+  makeReport_CADD(var.data)
+}
+
+
+cat("<b>This report was generated on: </b>",paste(Sys.time()))
+```
+
+
