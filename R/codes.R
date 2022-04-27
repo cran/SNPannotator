@@ -511,15 +511,3 @@ generate.report.file <- function(output,html.file,server,db,window_size,r2)
   }
   )
 }
-
-select.CADD.scores <- function(alleles,cadd.scores)
-{
-  alleles <- unlist(strsplit(alleles,'/'))
-  cadd.scores <- unlist(strsplit(cadd.scores,' = '))
-  cadd.scores1 <- unlist(strsplit(cadd.scores[1],','))
-  cadd.scores2 <- unlist(strsplit(cadd.scores[2],','))
-
-  i <- which(is.element(cadd.scores1,alleles))
-
-  return(paste(paste(cadd.scores1[i],collapse = ','),'=',paste(cadd.scores2[i],collapse = ',')))
-}

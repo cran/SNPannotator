@@ -39,10 +39,10 @@ makeReport_LD <- function(var.data) {
   cat(sprintf('<span class="topic">Position: </span> <span class="value">%s:%s (%s)</span><br/>', gsnp.data$Chr, gsnp.data$Pos_37, gsnp.data$Cytoband))
   cat(sprintf('<span class="topic">Alleles: </span> <span class="value">%s (%s)</span><br/>', gsnp.data$`Alleles in population`, gsnp.data$`Allele frequencies`))
   cat(sprintf('<span class="topic">Type: </span> <span class="value">%s</span><br/>', tools::toTitleCase(gsub(x =  gsnp.data$Type,pattern = '_',replacement = ' '))))
-  cat(sprintf('<span class="topic">Variants in high LD: </span> <span class="value">%s </span><br/>', nrow(var.data)-1))
+  cat(sprintf('<span class="topic">Proxy Variants: </span> <span class="value">%s </span><br/>', nrow(var.data)-1))
 
   
-  cat('<br/><span class="topic">Associated genes</span>')
+  cat('<br/><span class="topic">Mapped genes</span>')
   cat(kableExtra::kable(genes,format = 'html',col.names = NULL))
   
   
@@ -173,10 +173,10 @@ makeReport_CADD <- function(var.data) {
   cat(sprintf('<span class="topic">Position: </span> <span class="value">%s:%s (%s)</span><br/>', gsnp.data$Chr, gsnp.data$Pos_37, gsnp.data$Cytoband))
   cat(sprintf('<span class="topic">Alleles: </span> <span class="value">%s (%s)</span><br/>', gsnp.data$`Alleles in population`, gsnp.data$`Allele frequencies`))
   cat(sprintf('<span class="topic">Type: </span> <span class="value">%s</span><br/>', tools::toTitleCase(gsub(x =  gsnp.data$Type,pattern = '_',replacement = ' '))))
-  cat(sprintf('<span class="topic">Variants in high LD: </span> <span class="value">%s </span><br/>', nrow(var.data)-1))
+  cat(sprintf('<span class="topic">Proxy Variants: </span> <span class="value">%s </span><br/>', nrow(var.data)-1))
 
   
-  cat('<br/><span class="topic">Associated genes</span>')
+  cat('<br/><span class="topic">Mapped genes</span>')
   cat(kableExtra::kable(genes,format = 'html',col.names = NULL))
   
   
@@ -228,14 +228,19 @@ makeReport_CADD <- function(var.data) {
   
   
   if(has.cadd)
-    cat(kableExtra::kable(head(var.data[order(cadd.score,decreasing = TRUE),list(Linked_SNP,cadd,LD,Gene)]),format = 'html',col.names = c('rsID','CADD score','LD','Gene'),caption = '<span class="topic">Most deleterious variants</span>')%>% 
+    cat(kableExtra::kable(head(var.data[order(cadd.score,decreasing = TRUE),
+                                        list(Linked_SNP,cadd,Deleteriousness,as.character(LD),Gene)]),
+                          format = 'html',
+                          col.names = c('rsID','CADD score','Deleteriousness','LD','Gene'),
+                          caption = '<span class="topic">Most deleterious variants</span>')%>% 
           kableExtra::kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"), 
                                     full_width = F, 
                                     position = "left") %>%
           kableExtra::column_spec(1, bold = TRUE, border_right = TRUE,width="10em") %>%
           kableExtra::column_spec(2, width="10em", border_right = TRUE,extra_css = 'text-align:left;') %>%
           kableExtra::column_spec(3, width="10em", border_right = TRUE,extra_css = 'text-align:left;') %>%
-          kableExtra::column_spec(4, width="15em")) 
+          kableExtra::column_spec(4, width="10em", border_right = TRUE,extra_css = 'text-align:left;') %>%
+          kableExtra::column_spec(5, width="15em")) 
   
   cat('<br/>')
   cat('<br/>')

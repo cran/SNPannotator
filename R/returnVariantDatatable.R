@@ -11,8 +11,11 @@ returnVariantDatatable <- function(varNum , varInfo, database )
 
     for(i in seq_len(length(varInfo$LDlistFull)))
     {
-      LD = LDTable[variation2 == varInfo$LDlistFull[[i]]$name, r2]
-      tab <- rbind(tab, getVariantData(varNum,varInfo,varInfo$LDlistFull[[i]],database,LD))
+      if(!is.null(varInfo$LDlistFull[[i]]$name) & length(varInfo$LDlistFull[[i]]$population) > 0)
+      {
+        LD = LDTable[variation2 == varInfo$LDlistFull[[i]]$name, r2]
+        tab <- rbind(tab, getVariantData(varNum,varInfo,varInfo$LDlistFull[[i]],database,LD))
+      }
     }
   }
 
