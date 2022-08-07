@@ -9,7 +9,7 @@ getVariantData <- function(varNum, gVar, linkedVar, database , LD)
   alleles <- paste(pops$allele,collapse = "/")
   freqs <- paste(pops$frequency,collapse = "/")
 
-  ancestral_Allele <- ifelse( class(linkedVar$mappings$ancestral_allele) == "list" ,
+  ancestral_Allele <- ifelse(inherits(linkedVar$mappings$ancestral_allele, 'list'),
                               linkedVar$mappings$ancestral_allele[[1]],
                               "")
   ## create GWASCATALOG phenotype string
@@ -29,7 +29,7 @@ getVariantData <- function(varNum, gVar, linkedVar, database , LD)
 
     geneTab <- linkedVar$geneInfo
   # some times description is data.frame instead of list
-   if(class(geneTab$description) != 'list')
+   if(inherits(geneTab$description, 'list'))
      geneTab$description <- NULL
 
    setDT(geneTab)

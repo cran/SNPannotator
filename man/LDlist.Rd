@@ -24,17 +24,3 @@ a data table with variant information.
 \description{
 This function returns a list of variables that are in high LD with the lead variant.
 }
-\examples{
-# select the required server
-server <- "https://grch37.rest.ensembl.org"
-
-# select the database for population data
-# this can be selected from listDatabases() function
-db <- "1000GENOMES:phase_3:EUR"
-
-# create a vector of required SNPs
-rslist=c('rs236349')
-
-# fetch the LD list
-output <- LDlist(rslist,server,db,500,0.8)
-}

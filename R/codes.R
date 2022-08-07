@@ -1,3 +1,18 @@
+# this function replaces GET to check if server is available or not
+get_response_from_url <- function(server,ext)
+{
+
+  tryCatch({
+    r <- GET(paste0(server, ext), content_type("application/json"))
+    return(r)
+  },
+  error = function(e) {stop('An error has occured trying to access the server: ',
+                           server,
+                           '\nmessage: ', e$message,
+                           '\nCheck your internet connection and try agian later.',call.=FALSE)})
+
+}
+
 fetch <- function(ext,server)
 {
   counter <- 1
@@ -7,7 +22,7 @@ fetch <- function(ext,server)
   {
     #cat(sprintf("Try number %s",counter),fill = TRUE)
 
-    r <- GET(paste(server, ext, sep = ""), content_type("application/json"))
+    r <- GET(paste0(server, ext), content_type("application/json"))
 
     if(checkStatusCode(r))
       notFound <- FALSE
@@ -33,12 +48,6 @@ fetch <- function(ext,server)
 #' @param server name of the server. "https://rest.ensembl.org" can be used for GRCh38
 #' and "https://grch37.rest.ensembl.org" for GRCh37.
 #' @return a message is displayed to the user
-#' @examples
-#' # select the required Ensembl server
-#' server = "https://rest.ensembl.org"
-#'
-#' # check if server is accessible
-#' pingServer(server)
 #'
 pingServer <- function(server)
 {
@@ -46,8 +55,10 @@ pingServer <- function(server)
     {
 
       ext <- "/info/ping?"
-      r <- GET(paste(server, ext, sep = ""), content_type("application/json"))
-      stop_for_status(r)
+      #r <- GET(paste(server, ext, sep = ""), content_type("application/json"))
+      r <- get_response_from_url(server, ext)
+      #stop_for_status(r)
+      checkResponseStatusCode_stop(r)
 
       response <- fromJSON(toJSON(content(r)))
 
@@ -72,18 +83,15 @@ pingServer <- function(server)
 #' and "https://grch37.rest.ensembl.org" for GRCh37.
 #' @return A data table is returned which includes the name, description and size of the available populations
 #' in 1000 Genomes project database.
-#' @examples
-#' # select the required Ensembl server
-#' server = "https://rest.ensembl.org"
-#'
-#' # check the available population data for the selected server
-#' listDatabases("https://rest.ensembl.org")
 #'
 listDatabases <- function(server)
 {
   ext <- "/info/variation/populations/human?"
-  r <- GET(paste(server, ext, sep = ""), content_type("application/json"))
-  stop_for_status(r)
+  #r <- GET(paste0(server, ext), content_type("application/json"))
+  #stop_for_status(r)
+  r <- get_response_from_url(server, ext)
+  checkResponseStatusCode_stop(r)
+
 
   response <- fromJSON(toJSON(content(r)))
 
@@ -100,18 +108,15 @@ listDatabases <- function(server)
 #'
 #' @param server name of the server.
 #' @return a message is displayed to the user
-#' @examples
-#' # select the required Ensembl server
-#' server = "https://rest.ensembl.org"
-#'
-#' # check the data releases of the selected server
-#' releaseVersion(server)
 #'
 releaseVersion <- function(server)
 {
   ext <- "/info/data?"
-  r <- GET(paste(server, ext, sep = ""), content_type("application/json"))
-  stop_for_status(r)
+  #r <- GET(paste(server, ext, sep = ""), content_type("application/json"))
+  #stop_for_status(r)
+  r <- get_response_from_url(server, ext)
+  checkResponseStatusCode_stop(r)
+
 
   return( fromJSON(toJSON(content(r))))
 
@@ -246,6 +251,45 @@ checkStatusCode <- function(response)
 
 }
 
+# this is similar to the above function
+# but is used for responses rather than variant information
+# will stop the package if not successful
+checkResponseStatusCode_stop <- function(response)
+{
+  code <- response$status_code
+  response.url <- response$url
+
+  if(code ==200L)
+  {}
+  else if(code == 400L)
+  {
+    stop('Bad Request is sent to server (400).\nCheck this message ',  response.url)
+  }
+  else if (code== 403L) {
+    stop('You are submitting far too many requests to ',response.url)
+  }
+  else if (code== 404L)
+  {
+    stop('Badly formatted request was used (404). Check your URL.\n',  response.url )
+  }
+  else if (code== 408L)
+  {
+    stop('Timeout occured whe trying to access ',  response.url ,'\nCheck you internet connection or try later.')
+  }
+  else if(code == 429L)
+  {
+    stop('You have been rate-limited because of too many requests (429).\nTry again in an hour.')
+
+  }
+  else if (code== 503L){
+    stop('The service is temporarily unavailable (503) at ', response.url,'\nCheck your internet connection or try later.')
+  }
+  else
+  {
+    stop('An unknown error has occured trying to access ', response.url,'\nError code: ', code)
+  }
+}
+
 checkRemainingLimit <- function(response)
 {
   if(r$headers$`x-ratelimit-remaining` < 1)
@@ -314,9 +358,13 @@ saveOutputData <- function(varInfoTbl, wb)
 
 appendXLSXfile <- function(output,sheetName,fileName,addFirst = FALSE)
 {
-  if(!file.exists(fileName))
+  #Rename column name from pos37 to pos
+  this.output <- as.data.table(output)
+  data.table::setnames(this.output,'Pos_37','Pos')
+
+    if(!file.exists(fileName))
   {
-    write.xlsx(x = output,file = fileName,sheetName= sheetName)
+    write.xlsx(x = this.output, file = fileName,sheetName= sheetName)
   }
   else
   {
@@ -325,7 +373,7 @@ appendXLSXfile <- function(output,sheetName,fileName,addFirst = FALSE)
 
       wb <- loadWorkbook(fileName)
       addWorksheet(wb = wb, sheetName = sheetName)
-      writeData(wb = wb, sheet = sheetName, x = output, colNames = TRUE, rowNames = FALSE)
+      writeData(wb = wb, sheet = sheetName, x = this.output, colNames = TRUE, rowNames = FALSE)
 
       if(addFirst)
       {

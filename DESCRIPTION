@@ -2,8 +2,8 @@ Package: SNPannotator
 Type: Package
 Title: Investigating the Functional Characteristics of Selected SNPs
         and Their Vicinity Genomic Region
-Version: 0.2.2.0
-Date: 2022-04-27
+Version: 0.2.4.0
+Date: 2022-08-06
 Authors@R: c(
   person(given = "Alireza", family = "Ani", role = c("aut", "cre"), email = "a.ani@umcg.nl"),
   person(given = "Zoha", family = "Kamali", role = "aut"),
@@ -20,6 +20,6 @@ License: GPL-3
 Encoding: UTF-8
 RoxygenNote: 7.1.1
 NeedsCompilation: no
-Packaged: 2022-04-27 19:16:55 UTC; Alireza
+Packaged: 2022-08-06 19:38:57 UTC; Alireza
 Repository: CRAN
-Date/Publication: 2022-04-27 19:40:02 UTC
+Date/Publication: 2022-08-07 07:40:02 UTC

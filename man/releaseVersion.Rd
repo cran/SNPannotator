@@ -16,11 +16,3 @@ a message is displayed to the user
 Shows the data releases available on this REST server.
 May return more than one release (unfrequent non-standard Ensembl configuration).
 }
-\examples{
-# select the required Ensembl server
-server = "https://rest.ensembl.org"
-
-# check the data releases of the selected server
-releaseVersion(server)
-
-}

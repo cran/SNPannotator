@@ -16,11 +16,3 @@ a message is displayed to the user
 \description{
 This function test whether the Ensembl server is accessible or not
 }
-\examples{
-# select the required Ensembl server
-server = "https://rest.ensembl.org"
-
-# check if server is accessible
-pingServer(server)
-
-}

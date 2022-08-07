@@ -9,19 +9,7 @@
 #' @param window_size Number of base pairs around the variant for checking LD scores (max = 500kb)
 #' @param r2 The LD threshold for selecting variants around the target SNP.
 #' @return a data table with variant information.
-#' @examples
-#' # select the required server
-#' server <- "https://grch37.rest.ensembl.org"
 #'
-#' # select the database for population data
-#' # this can be selected from listDatabases() function
-#' db <- "1000GENOMES:phase_3:EUR"
-#'
-#' # create a vector of required SNPs
-#' rslist=c('rs236349')
-#'
-#' # fetch the LD list
-#' output <- LDlist(rslist,server,db,500,0.8)
 LDlist <- function(rslist,server,db, window_size, r2)
 {
 

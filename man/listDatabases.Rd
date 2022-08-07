@@ -19,11 +19,3 @@ This function list the name, description and size of the available populations
 in 1000 Genomes project database. This database will be used for returning variables in high LD
 with the target SNP.
 }
-\examples{
-# select the required Ensembl server
-server = "https://rest.ensembl.org"
-
-# check the available population data for the selected server
-listDatabases("https://rest.ensembl.org")
-
-}
