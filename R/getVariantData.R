@@ -42,15 +42,18 @@ getVariantData <- function(varNum, gVar, linkedVar, database , LD)
 
   if(nrow(geneTab) > 0 && geneTab[feature_type == 'gene', .N] > 0)
   {
-    geneNames <- paste(geneTab[feature_type == 'gene', external_name], collapse = "/")
-    geneIDs <- paste(geneTab[feature_type == 'gene', gene_id], collapse = "/")
+    #geneNames <- paste(geneTab[feature_type == 'gene', external_name], collapse = "/")
+    #geneIDs <- paste(geneTab[feature_type == 'gene', gene_id], collapse = "/")
+
+    geneNames <- paste(geneTab[feature_type == 'gene',]$external_name, collapse = "/")
+    geneIDs <- paste(geneTab[feature_type == 'gene', ]$gene_id, collapse = "/")
     #geneDesc <- paste(geneTab[feature_type == 'gene', description], collapse = "/")
   }
 
   if(nrow(geneTab) > 0 && geneTab[feature_type == 'band', .N] > 0)
   {
-    band <- paste0(geneTab[feature_type == "band",seq_region_name],
-                   geneTab[feature_type == "band",id])
+    band <- paste0(geneTab[feature_type == "band",]$seq_region_name,
+                   geneTab[feature_type == "band",]$id)
   }
 
   ## create table

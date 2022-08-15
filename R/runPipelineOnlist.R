@@ -203,7 +203,7 @@ annotate <- function(rslist,
         output[grepl(x = cadd,pattern = ','), cadd := select.CADD.scores(Alleles,cadd),by = Linked_SNP]
 
       # convert scores to percentile
-      output[,Deleteriousness := convert.CADD(cadd)]
+      output[,Deleteriousness := convert.CADD(cadd), by =list(gSNP,Linked_SNP)]
     }
 
   }
