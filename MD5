@@ -1,10 +1,10 @@
-6791a2498afa2f34e7e54df19fb41358 *DESCRIPTION
+fb627185ae1a4ef401da477b23e99f9a *DESCRIPTION
 d31ce39b2365c421e88cb3402645e62e *NAMESPACE
-25b191dd4c77a144bb853e6e01a01e44 *R/CADD.R
+4853f896f1985d5ac72bd974436fd3d5 *R/CADD.R
 b6cf15407fa03d0b5163c80cf3b4c331 *R/checkReturnedVariantData.R
 3ee1c502b62ece2f7972863631a496eb *R/codes.R
 ee9a362ee65780e879e0ec7df3a21b60 *R/getGeneFile.R
-7780d8a718ea3683db4679db6227f8f9 *R/getVariantData.R
+76e30fd1f434efceec49acee9f1deefc *R/getVariantData.R
 0f98ed42faf3b8d2af3a6a576f742dbf *R/getVariantLDs.R
 4a48d118e43d27dd77b99d60a35dec8d *R/inSilicoSeqPipeline.R
 6c5043bbb54302063327b10b06c0dcd4 *R/returnVariantDatatable.R

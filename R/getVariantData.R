@@ -28,8 +28,11 @@ getVariantData <- function(varNum, gVar, linkedVar, database , LD)
   {
 
     geneTab <- linkedVar$geneInfo
+
   # some times description is data.frame instead of list
-   if(inherits(geneTab$description, 'list'))
+   #if(inherits(geneTab$description, 'list'))
+  # description not needed
+    if(is.element('description',names(geneTab)))
      geneTab$description <- NULL
 
    setDT(geneTab)

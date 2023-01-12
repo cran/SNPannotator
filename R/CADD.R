@@ -1,6 +1,9 @@
 convert.CADD <- function(cadd)
 {
-  cadd =gsub(pattern = '(.+=\\s)(.+)',replacement = '\\2',x = cadd)
+
+  cadd =ifelse(grepl(pattern = "NA", x=cadd), # maybe NA is returned as the output
+               NA,
+               gsub(pattern = '(.+=\\s)(.+)',replacement = '\\2',x = cadd))
 
   cadd = as.numeric(cadd)
 
