@@ -1,23 +1,24 @@
-#' Run the annotation pipeline on a list of variants
+#' Demo run of the annotation pipeline
 #'
-#' This function receives the path to the configuration file.
-#' A list of variants is received and their information is checked on various API servers.
+#' This function is a demo of the annotation algorithm.
 #'
-#' @param configurationFilePath Character. The path to the configuration file.
-#' @param verbose Logical. Whether to display messages in the console.
-#' @return A data table containing all variant information is returned based on the user's selected
-#' specifications and parameters. Report files in various formats, including text, HTML,
-#' Excel, and image, are saved in the output folder.
+#' @return A data table containing the variant information for testing is returned.
+#' Report files are also saved in the current working directory.
 #'
 #' @export
 #'
-run_annotation <- function(configurationFilePath, verbose = TRUE) {
+demo_annotation <- function() {
+
+  configFile = system.file("extdata", "demo_config.ini", package = "SNPannotator")
+
+  if(is.null(configFile) || !file.exists(configFile))
+    stop('demo configuration file is missing. re-install the package.')
 
   options(error=NULL)
   options(warn = -1)
 
   # setup the verbose option for this run
-  .SNPannotator$verbose <- verbose
+  .SNPannotator$verbose <- TRUE
 
   ## empty the env on exit
   on.exit({
@@ -41,7 +42,9 @@ run_annotation <- function(configurationFilePath, verbose = TRUE) {
 
   #===========================================================
   # read and validate configuration file
-  config.list = loadConfigurationFile(configurationFilePath)
+
+  config.list = loadConfigurationFile(configFile, demo = TRUE)
+
   if(is.null(config.list))
     stop('Could not validate the configuration file.',call. = FALSE)
 
@@ -62,7 +65,6 @@ run_annotation <- function(configurationFilePath, verbose = TRUE) {
   LDlist = config.list$general$LDlist
   start_index = config.list$general$start_index
 
-
   # make a table for output excel file (1st sheet)
   project_info_tbl <- NULL
   if(LDlist == TRUE)
@@ -78,7 +80,6 @@ run_annotation <- function(configurationFilePath, verbose = TRUE) {
                                    "Output folder" = outputFolder,
                                    "Genomic build" = build,
                                    "RS list" = paste(rslist,collapse = ';'))
-
 
   #DEPRECATED
   #geneNames.file = config.list$general$geneNames_File
@@ -110,13 +111,11 @@ run_annotation <- function(configurationFilePath, verbose = TRUE) {
   STRING_config_list[['custom_label_font_size']] = config.list$STRING_DB$custom_label_font_size
   STRING_config_list[['limit']] = config.list$STRING_DB$limit
 
-  # eQTL catalogue
+  # QTL
   qtl.server = config.list$QTL$server
   qtl.p.value.threshold = config.list$QTL$pvalue_threshold
   eqtl.run <- config.list$QTL$eQTL
   sqtl.run <- config.list$QTL$sQTL
-  gtex.datasetId <- config.list$QTL$dataset
-  # qtl.eQTL_group = config.list$QTL$eQTL_group
 
   # DEPRECATE - GWAS catalogue
   #gwas.catalogue.graph.file = config.list$GWAS_Catalogue$graph_file
@@ -184,11 +183,7 @@ run_annotation <- function(configurationFilePath, verbose = TRUE) {
 
   if(!is.null(qtl.server))
   {
-    # if(!is.null(qtl.eQTL_group))
-    #   print_and_log(sprintf("eQTL group = %s",qtl.eQTL_group),display=FALSE)
     print_and_log(sprintf("QTL p_value threshold = %s",qtl.p.value.threshold),display=FALSE)
-    if(build == 'grch38')
-      print_and_log(sprintf("QTL datasetId = %s",gtex.datasetId),display=FALSE)
   }
 
 
@@ -215,19 +210,14 @@ run_annotation <- function(configurationFilePath, verbose = TRUE) {
   # load gene name file - to add gene information for intergenic variations
   # based on grch37 or 38
 
-  #g.set <- loadGeneNameData(build)
   g.set <- getGeneFile_v2(build)
+
 
   #===========================================================
 
   # load cytoband file
-  #c.set <- loadCytobandData(build)
   c.set <- getCytobandFile_v2(build)
-  #===========================================================
 
-  ## load the GWAS catalog graph
-  # DEPRECATED
-  #traits.graph=loadGWAScatGraph()
 
   #===========================================================
 
@@ -248,33 +238,17 @@ run_annotation <- function(configurationFilePath, verbose = TRUE) {
   ##### ping APIs ######
   ######################
   .SNPannotator$pingEnsembl <- NULL
-  .SNPannotator$EnsemblRelease <- NULL
   .SNPannotator$PingSTRING <- NULL
   .SNPannotator$PingQTL <- NULL
 
   if(!is.null(ensembl.server))
-  {
     .SNPannotator$pingEnsembl <- pingEnsembl(ensembl.server)
 
-
-    .SNPannotator$EnsemblRelease <- SNPannotator::EnsemblReleases(build = sub("^[^0-9]*([0-9]+).*", "\\1", build))
-    .SNPannotator$EnsemblRelease <- .SNPannotator$EnsemblRelease$releases[1]
-    print_and_log(paste("Ensembl release:", .SNPannotator$EnsemblRelease))
-
-    project_info_tbl = cbind(project_info_tbl , data.table("Ensembl version" = .SNPannotator$EnsemblRelease))
-  }
-
   if(!is.null(qtl.server))
-  {
     .SNPannotator$PingQTL <- PingQTL(qtl.server,build)
-
-    if(build == 'grch38')
-      project_info_tbl = cbind(project_info_tbl , data.table("GTEx version" = gtex.datasetId))
-  }
 
   if(!is.null(string.server))
     .SNPannotator$PingSTRING <- PingSTRING(string.server)
-
 
 
   ######################
@@ -297,6 +271,7 @@ run_annotation <- function(configurationFilePath, verbose = TRUE) {
     clinvar_tab <- NULL
     gwascat_tab <- NULL
     phenotype_tab <- NULL
+
 
     #===========================================================
 
@@ -382,64 +357,7 @@ run_annotation <- function(configurationFilePath, verbose = TRUE) {
       print_and_log('done.')
     }
 
-    # fill missing genes
-    if(!is.null(g.set))
-    {
-      print_and_log("Checking gene information ...", LF = FALSE)
 
-      tab[Gene=='' & GeneId=='',
-          c('GeneId','Gene') := find.nearest.gene(Chr,Pos,g.set,nearestGene_type),
-          by=list(Chr,Pos)]
-
-
-      print_and_log('done.')
-    }
-
-    # find nearest gene
-    # deprecated - only the nearest is reported now
-    # tab[, Nearest_gene := mapply(keep_nearest_gene_in_row,Gene,GeneId)]
-
-
-    #===========================================================
-
-    ##################################
-    ### GWAS catalog associations  ###
-    ##################################
-    # DEPRECATED
-    # print_and_log('Checking Phenotype associations ...',LF=FALSE)
-    # if(!is.null(traits.graph))
-    # {
-    #
-    #   gwascatalog.tab <- find.associations.offline(traits.graph,tab)
-    #
-    #   print_and_log('done.')
-    #
-    #   if(!is.null(gwascatalog.tab) && nrow(gwascatalog.tab) > 0 )
-    #   {
-    #     gwascatalog.tab[,Phenotype:=paste(Phenotype,collapse = ';'),by=SNP]
-    #     gwascatalog.tab = gwascatalog.tab[!duplicated(SNP),]
-    #
-    #     old.name.order <- names(tab)
-    #     tab <- merge(x=tab,
-    #                  y=gwascatalog.tab,
-    #                  by.x = 'Linked_SNP',
-    #                  by.y = 'SNP',
-    #                  all.x = TRUE,
-    #                  sort = FALSE)
-    #
-    #     setcolorder(tab,old.name.order)
-    #
-    #   } else {
-    #     # add an empty column for consistency
-    #     tab[, Phenotype := ""]
-    #     print_and_log('No phenotype association found.',display=FALSE)
-    #
-    #   }
-    # }else
-    # {
-    #   print_and_log("skipped.")
-    #   tab[, Phenotype := ""]
-    # }
 
     #===========================================================
 
@@ -470,25 +388,26 @@ run_annotation <- function(configurationFilePath, verbose = TRUE) {
 
     #===========================================================
 
-    ############
-    ### QTL  ###
-    ############
-
-    if(build =='grch37')
+    if(!is.null(qtl.server) && .SNPannotator$PingQTL == TRUE)
     {
-      if(!is.null(qtl.server) && .SNPannotator$PingQTL == TRUE)
+      if(eqtl.run==TRUE)
       {
-        print_and_log('Checking eQTL data ...', LF = FALSE)
-        eqtl.tab <- find.eqtl.ebi(qtl.server,
-                                  tab[tab$LD >0.8,]$Linked_SNP, # only find eQTL for top SNP and linked snps with LD > 0.8
-                                  qtl.p.value.threshold)
+
+
+        temp_tab <- tab[LD >0.8,] # only find eQTL for top SNP and linked snps with LD > 0.8
+        temp_tab[,b38_id := sprintf("chr%s_%s_%s_%s_b38",Chr,Pos,Ref_Allele,Alt_Allele)]
+        b38_ids <- unique(temp_tab$b38_id)
+
+        ## eqtl from GTEx
+        print_and_log('Checking eQTL data ...',LF=FALSE)
+        eqtl.tab <- find.qtl.GTEx(server = qtl.server,
+                                  qtl='eQTL',
+                                  variant_IDs = b38_ids,
+                                  pvalue_threshold = qtl.p.value.threshold)
 
         if(!is.null(eqtl.tab) && nrow(eqtl.tab) > 0)
         {
-          eqtl.tab <- add.gene.name(eqtl.tab , g.set)
-          #eqtl.tab <- clean.eqtl.output(output,eqtl.tab)
           eqtl.tab$`#gSNP` <- i
-
           setcolorder(eqtl.tab,'#gSNP')
 
           # save current data
@@ -503,95 +422,47 @@ run_annotation <- function(configurationFilePath, verbose = TRUE) {
           # only add one column name row to the file
           if(add.header.eqtl.file == TRUE)
             add.header.eqtl.file <- FALSE
+
         } else {
           print_and_log('No eQTL association was found.',display=FALSE)
         }
-
-        print_and_log('Checking eQTL data ... done.')
-
       }
 
-    } else { # build38
-      if(!is.null(qtl.server) && .SNPannotator$PingQTL == TRUE)
+      if(sqtl.run == TRUE)
       {
-        if(eqtl.run==TRUE)
+
+
+        ## sqtl from GTEx
+        print_and_log('Checking sQTL data ...',LF=FALSE)
+        sqtl.tab <- find.qtl.GTEx(server = qtl.server,
+                                  qtl='sQTL',
+                                  variant_IDs = b38_ids,
+                                  pvalue_threshold = qtl.p.value.threshold)
+
+        if(!is.null(sqtl.tab) && nrow(sqtl.tab) > 0)
         {
+          sqtl.tab$`#gSNP` <- i
 
+          setcolorder(sqtl.tab,'#gSNP')
 
-          temp_tab <- tab[LD >0.8,] # only find eQTL for top SNP and linked snps with LD > 0.8
-          temp_tab[,b38_id := sprintf("chr%s_%s_%s_%s_b38",Chr,Pos,Ref_Allele,Alt_Allele)]
-          b38_ids <- unique(temp_tab$b38_id)
+          # save current data
+          fwrite(sqtl.tab,
+                 file = output.sqtl.file ,
+                 quote = FALSE,
+                 append = TRUE,
+                 sep='\t',
+                 row.names = FALSE,
+                 col.names = add.header.sqtl.file)
 
-          ## eqtl from GTEx
-          print_and_log('Checking eQTL data ...',LF=FALSE)
-          eqtl.tab <- find.qtl.GTEx(server = qtl.server,
-                                    datasetId = gtex.datasetId,
-                                    qtl='eQTL',
-                                    variant_IDs = b38_ids,
-                                    pvalue_threshold = qtl.p.value.threshold)
+          # only add one column name row to the file
+          if(add.header.sqtl.file == TRUE)
+            add.header.sqtl.file <- FALSE
 
-          if(!is.null(eqtl.tab) && nrow(eqtl.tab) > 0)
-          {
-            eqtl.tab$`#gSNP` <- i
-            setcolorder(eqtl.tab,'#gSNP')
-
-            # save current data
-            fwrite(eqtl.tab,
-                   file = output.eqtl.file ,
-                   quote = FALSE,
-                   append = TRUE,
-                   sep='\t',
-                   row.names = FALSE,
-                   col.names = add.header.eqtl.file)
-
-            # only add one column name row to the file
-            if(add.header.eqtl.file == TRUE)
-              add.header.eqtl.file <- FALSE
-
-          } else {
-            print_and_log('No eQTL association was found.',display=FALSE)
-          }
-        }
-
-        if(sqtl.run == TRUE)
-        {
-
-
-          ## sqtl from GTEx
-          print_and_log('Checking sQTL data ...',LF=FALSE)
-          sqtl.tab <- find.qtl.GTEx(server = qtl.server,
-                                    datasetId = gtex.datasetId,
-                                    qtl='sQTL',
-                                    variant_IDs = b38_ids,
-                                    pvalue_threshold = qtl.p.value.threshold)
-
-          if(!is.null(sqtl.tab) && nrow(sqtl.tab) > 0)
-          {
-            sqtl.tab$`#gSNP` <- i
-
-            setcolorder(sqtl.tab,'#gSNP')
-
-            # save current data
-            fwrite(sqtl.tab,
-                   file = output.sqtl.file ,
-                   quote = FALSE,
-                   append = TRUE,
-                   sep='\t',
-                   row.names = FALSE,
-                   col.names = add.header.sqtl.file)
-
-            # only add one column name row to the file
-            if(add.header.sqtl.file == TRUE)
-              add.header.sqtl.file <- FALSE
-
-          } else {
-            print_and_log('No sQTL association was found.',display=FALSE)
-          }
+        } else {
+          print_and_log('No sQTL association was found.',display=FALSE)
         }
       }
     }
-    #===========================================================
-
 
     ###################################
     # finished analyzing this variant #
@@ -603,20 +474,20 @@ run_annotation <- function(configurationFilePath, verbose = TRUE) {
       output <- rbind(output,tab,fill=TRUE)
       output_list[['input']][[rs]] <- varInfo
 
-      if(!is.null(clinvar_tab) && nrow(clinvar_tab))
+      if(!is.null(clinvar_tab))
         ens.clinvar.output <- rbind(ens.clinvar.output ,clinvar_tab,fill=TRUE)
 
-      if(!is.null(gwascat_tab) && nrow(gwascat_tab))
+      if(!is.null(gwascat_tab))
         ens.gwascat.output <- rbind(ens.gwascat.output ,gwascat_tab,fill=TRUE)
 
-      if(!is.null(phenotype_tab) && nrow(phenotype_tab))
+      if(!is.null(phenotype_tab))
         ens.phenotype.output <- rbind(ens.phenotype.output ,phenotype_tab,fill=TRUE)
 
       # add eQTL terms to the final list
-      if(!is.null(eqtl.tab) && nrow(eqtl.tab))
+      if(!is.null(eqtl.tab))
         eqtl.output <- rbind(eqtl.output ,eqtl.tab,fill=TRUE)
       # add sQTL terms to the final list
-      if(!is.null(sqtl.tab) && nrow(sqtl.tab))
+      if(!is.null(sqtl.tab))
         sqtl.output <- rbind(sqtl.output ,sqtl.tab,fill=TRUE)
 
     }
@@ -800,8 +671,11 @@ run_annotation <- function(configurationFilePath, verbose = TRUE) {
 
     # save excel file - main
     writeXLSXfile(output,project_info_tbl,fileName = output.xlsx.file)
+    # appendXLSXfile(output,thisSheetName = 'All Variants',fileName = output.xlsx.file, addFirst = FALSE)
   }
 
+
+  #===========================================================
 
   # save excel file - ENSEMBL ClinVar
   if(!is.null(ens.clinvar.output) && nrow(ens.clinvar.output) > 0)
@@ -826,7 +700,6 @@ run_annotation <- function(configurationFilePath, verbose = TRUE) {
     output_list <- c(output_list,list('Phenotypes'= ens.phenotype.output))
 
   }
-
   #===========================================================
 
   # save excel file - eQTL
@@ -918,16 +791,11 @@ run_annotation <- function(configurationFilePath, verbose = TRUE) {
 
   if(!is.null(trait.cluster.report) )
   {
-    # write.table(trait.cluster.report,
-    #             file= trait.cluster.file,
-    #             col.names = FALSE,
-    #             row.names = FALSE,
-    #             quote=FALSE)
 
-    appendXLSXfile(trait.cluster.report,
-                   thisSheetName = 'Associated trait clusters',
-                   fileName = output.xlsx.file,
-                   addFirst = FALSE)
+    # appendXLSXfile(trait.cluster.report,
+    #                thisSheetName = 'Associated trait clusters',
+    #                fileName = output.xlsx.file,
+    #                addFirst = FALSE)
 
     output_list <- c(output_list,list('traitClusters' = trait.cluster.report))
 

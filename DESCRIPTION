@@ -1,9 +1,9 @@
 Package: SNPannotator
 Type: Package
-Title: Investigating the Functional Characteristics of Selected SNPs
-        and Their Vicinity Genomic Region
-Version: 0.2.6.0
-Date: 2023-01-12
+Title: Investigating the Functional Characteristics of Selected
+        Variants and Their Vicinity Genomic Region
+Version: 1.4.0
+Date: 2025-11-15
 Authors@R: c(
   person(given = "Alireza", family = "Ani", role = c("aut", "cre"), email = "a.ani@umcg.nl"),
   person(given = "Zoha", family = "Kamali", role = "aut"),
@@ -12,14 +12,20 @@ Author: Alireza Ani [aut, cre],
   Zoha Kamali [aut],
   Ahmad Vaez [aut]
 Maintainer: Alireza Ani <a.ani@umcg.nl>
-Depends: R (>= 3.5)
-Imports: data.table, httr, jsonlite, xml2, openxlsx, progress,
-        doParallel, foreach, ggplot2, kableExtra, methods, rmarkdown
+Depends: R (>= 4.0)
+Imports: data.table (>= 1.15.4), httr (>= 1.4.7), jsonlite (>= 1.8.8),
+        xml2 (>= 1.3.6), openxlsx (>= 4.2.5.2), progress (>= 1.2.3),
+        ggplot2 (>= 3.5.1), kableExtra (>= 1.4.0), methods (>= 4.2.0),
+        rmarkdown (>= 2.26), ini (>= 0.3.1), igraph (>= 2.0.3), ggraph
+        (>= 2.2.1), futile.logger (>= 1.4.3), png , readr (>= 2.1.5)
 Description: To investigate the functional characteristics of selected SNPs and their vicinity genomic region. Linked SNPs in moderate to high linkage disequilibrium (e.g. r2>0.50) with the corresponding index SNPs will be selected for further analysis.
+URL: https://cran.r-project.org/package=SNPannotator
 License: GPL-3
 Encoding: UTF-8
-RoxygenNote: 7.2.2
+RoxygenNote: 7.3.2
+Suggests: knitr
+VignetteBuilder: knitr
 NeedsCompilation: no
-Packaged: 2023-01-12 09:33:50 UTC; Alireza
+Packaged: 2025-11-15 19:49:27 UTC; Alireza
 Repository: CRAN
-Date/Publication: 2023-01-12 15:40:02 UTC
+Date/Publication: 2025-11-16 10:10:02 UTC

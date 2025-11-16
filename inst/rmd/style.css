@@ -17,8 +17,26 @@ caption{
 }
 
 hr {
+  border: 2px solid black;
+  border-radius: 5px;
+}
+
+hr.thin {
+  border: 1px solid Teal;
+  border-radius: 5px;
+}
+
+
+hr.teal {
   border: 3px solid Teal;
   border-radius: 5px;
+}
+
+hr.double-line {
+  border: none; /* Remove the default border */
+  border-top: 3px double navy; /* Top border as double line */
+  height: 0; /* Set height to 0 to avoid extra spacing */
+  margin: 20px 0; /* Add some vertical spacing */
 }
 
 .tab-folder > .tab-content:target ~ .tab-content:last-child, .tab-folder > .tab-content {
