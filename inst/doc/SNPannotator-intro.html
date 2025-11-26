@@ -323,7 +323,7 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 
 
 <h1 class="title toc-ignore">Introduction to SNPannotator package</h1>
-<h3 class="subtitle">Investigating the Functional Characteristics of Selected SNPs and Their Vicinity Genomic Region</h3>
+<h3 class="subtitle">Automated Functional Annotation of Genetic Variants and Linked Proxies</h3>
 
 
 
@@ -354,7 +354,7 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 <a class="sourceLine" id="cb2-2" title="2"><span class="kw">library</span>(SNPannotator)</a>
 <a class="sourceLine" id="cb2-3" title="3"></a>
 <a class="sourceLine" id="cb2-4" title="4"><span class="co"># save the configuration file to a specific folder</span></a>
-<a class="sourceLine" id="cb2-5" title="5"><span class="kw">getConfigFile</span>(<span class="st">&#39;/home/user/project1/postGWAS&#39;</span>)</a></code></pre></div>
+<a class="sourceLine" id="cb2-5" title="5"><span class="kw">getConfigFile</span>(<span class="st">&#39;/home/user/analysis&#39;</span>)</a></code></pre></div>
 <hr />
 </div>
 <div id="step-by-step-guide-to-running-the-package" class="section level2">
@@ -401,7 +401,7 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 <div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb4-1" title="1"></a>
 <a class="sourceLine" id="cb4-2" title="2"><span class="kw">library</span>(SNPannotator)</a>
 <a class="sourceLine" id="cb4-3" title="3"></a>
-<a class="sourceLine" id="cb4-4" title="4"><span class="kw">getConfigFile</span>(<span class="st">&#39;/home/user/config.ini&#39;</span>)</a></code></pre></div>
+<a class="sourceLine" id="cb4-4" title="4"><span class="kw">getConfigFile</span>(<span class="st">&#39;/home/user/analysis&#39;</span>)</a></code></pre></div>
 <hr />
 </div>
 <div id="run_annotation" class="section level3">
@@ -486,8 +486,8 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 <a class="sourceLine" id="cb9-6" title="6"><span class="kw">findRSID</span>(<span class="dv">15</span>, <span class="dv">80137560</span> ,<span class="dt">build=</span> <span class="st">&quot;37&quot;</span>)</a></code></pre></div>
 <hr />
 </div>
-<div id="stringdb_annotation" class="section level3">
-<h3>stringdb_annotation()</h3>
+<div id="run_stringdb_annotation" class="section level3">
+<h3>run_stringdb_annotation()</h3>
 <p>This function takes a vector of gene symbols, retrieves their interaction partners from STRING DB, and performs functional enrichment analysis.</p>
 <p>Function parameters</p>
 <ul>
@@ -498,7 +498,7 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 <li><p>… Additional arguments passed to downstream functions for extended customization.</p></li>
 </ul>
 <p>Example:</p>
-<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb10-1" title="1"><span class="kw">stringdb_annotation</span>(<span class="st">&#39;BC_project&#39;</span>,<span class="kw">c</span>(<span class="st">&#39;BRCA1&#39;</span>,<span class="st">&#39;BRCA2&#39;</span>),<span class="dt">limit=</span><span class="dv">10</span>)</a></code></pre></div>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb10-1" title="1"><span class="kw">run_stringdb_annotation</span>(<span class="st">&#39;BC_project&#39;</span>,<span class="kw">c</span>(<span class="st">&#39;BRCA1&#39;</span>,<span class="st">&#39;BRCA2&#39;</span>),<span class="dt">limit=</span><span class="dv">10</span>)</a></code></pre></div>
 </div>
 </div>
 

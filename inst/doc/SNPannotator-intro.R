@@ -16,7 +16,7 @@
 #  library(SNPannotator)
 #  
 #  # save the configuration file to a specific folder
-#  getConfigFile('/home/user/project1/postGWAS')
+#  getConfigFile('/home/user/analysis')
 
 ## -----------------------------------------------------------------------------
 #  
@@ -29,7 +29,7 @@
 #  
 #  library(SNPannotator)
 #  
-#  getConfigFile('/home/user/config.ini')
+#  getConfigFile('/home/user/analysis')
 #  
 
 ## -----------------------------------------------------------------------------
@@ -60,6 +60,6 @@
 #  
 
 ## -----------------------------------------------------------------------------
-#  stringdb_annotation('BC_project',c('BRCA1','BRCA2'),limit=10)
+#  run_stringdb_annotation('BC_project',c('BRCA1','BRCA2'),limit=10)
 #  
 

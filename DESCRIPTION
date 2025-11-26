@@ -1,9 +1,9 @@
 Package: SNPannotator
 Type: Package
-Title: Investigating the Functional Characteristics of Selected
-        Variants and Their Vicinity Genomic Region
-Version: 1.4.0
-Date: 2025-11-15
+Title: Automated Functional Annotation of Genetic Variants and Linked
+        Proxies
+Version: 1.4.3
+Date: 2025-11-26
 Authors@R: c(
   person(given = "Alireza", family = "Ani", role = c("aut", "cre"), email = "a.ani@umcg.nl"),
   person(given = "Zoha", family = "Kamali", role = "aut"),
@@ -18,7 +18,7 @@ Imports: data.table (>= 1.15.4), httr (>= 1.4.7), jsonlite (>= 1.8.8),
         ggplot2 (>= 3.5.1), kableExtra (>= 1.4.0), methods (>= 4.2.0),
         rmarkdown (>= 2.26), ini (>= 0.3.1), igraph (>= 2.0.3), ggraph
         (>= 2.2.1), futile.logger (>= 1.4.3), png , readr (>= 2.1.5)
-Description: To investigate the functional characteristics of selected SNPs and their vicinity genomic region. Linked SNPs in moderate to high linkage disequilibrium (e.g. r2>0.50) with the corresponding index SNPs will be selected for further analysis.
+Description: To automated functional annotation of genetic variants and linked proxies. Linked SNPs in moderate to high linkage disequilibrium (e.g. r2>0.50) with the corresponding index SNPs will be selected for further analysis.
 URL: https://cran.r-project.org/package=SNPannotator
 License: GPL-3
 Encoding: UTF-8
@@ -26,6 +26,6 @@ RoxygenNote: 7.3.2
 Suggests: knitr
 VignetteBuilder: knitr
 NeedsCompilation: no
-Packaged: 2025-11-15 19:49:27 UTC; Alireza
+Packaged: 2025-11-26 16:16:55 UTC; Alireza
 Repository: CRAN
-Date/Publication: 2025-11-16 10:10:02 UTC
+Date/Publication: 2025-11-26 17:00:02 UTC
