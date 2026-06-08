@@ -60,7 +60,7 @@ run_annotation <- function(configurationFilePath, verbose = TRUE) {
   window_size = config.list$general$window_size
   r2 = config.list$general$r2
   LDlist = config.list$general$LDlist
-  start_index = config.list$general$start_index
+  #start_index = config.list$general$start_index # DEPRECATED
 
 
   # make a table for output excel file (1st sheet)
@@ -154,7 +154,7 @@ run_annotation <- function(configurationFilePath, verbose = TRUE) {
   ####
   stopifnot('RS list must be a vector.' = is.vector(rslist),
             'Range for r2 is 0-1' = (r2 >0 & r2<=1),
-            'Range for window size is 100-500' = (window_size > 100 & window_size<=500)
+            'Range for window size is 100-500' = (window_size >= 100 & window_size<=500)
   )
 
   #===========================================================
@@ -181,15 +181,18 @@ run_annotation <- function(configurationFilePath, verbose = TRUE) {
   print_and_log(sprintf("Population = %s",db),display=FALSE)
   print_and_log(sprintf("R2 threshold = %s",r2),display=FALSE)
   print_and_log(sprintf("Window = %s",window_size),display=FALSE)
+  print_and_log(sprintf("ENSEMBL server URL = %s",ensembl.server),display=FALSE)
 
   if(!is.null(qtl.server))
   {
-    # if(!is.null(qtl.eQTL_group))
-    #   print_and_log(sprintf("eQTL group = %s",qtl.eQTL_group),display=FALSE)
+    print_and_log(sprintf("QTL server URL = %s",qtl.server),display=FALSE)
     print_and_log(sprintf("QTL p_value threshold = %s",qtl.p.value.threshold),display=FALSE)
     if(build == 'grch38')
       print_and_log(sprintf("QTL datasetId = %s",gtex.datasetId),display=FALSE)
   }
+
+  if(!is.null(string.server))
+    print_and_log(sprintf("STRING server URL = %s",string.server),display=FALSE)
 
 
   print_and_log("",display=FALSE)
@@ -257,23 +260,28 @@ run_annotation <- function(configurationFilePath, verbose = TRUE) {
     .SNPannotator$pingEnsembl <- pingEnsembl(ensembl.server)
 
 
-    .SNPannotator$EnsemblRelease <- SNPannotator::EnsemblReleases(build = sub("^[^0-9]*([0-9]+).*", "\\1", build))
-    .SNPannotator$EnsemblRelease <- .SNPannotator$EnsemblRelease$releases[1]
+    .SNPannotator$EnsemblRelease <- SNPannotator::EnsemblReleases(server = ensembl.server)[[1]]
     print_and_log(paste("Ensembl release:", .SNPannotator$EnsemblRelease))
 
+    project_info_tbl = cbind(project_info_tbl , data.table("Ensembl server URL" = ensembl.server))
     project_info_tbl = cbind(project_info_tbl , data.table("Ensembl version" = .SNPannotator$EnsemblRelease))
   }
 
   if(!is.null(qtl.server))
   {
     .SNPannotator$PingQTL <- PingQTL(qtl.server,build)
+    project_info_tbl = cbind(project_info_tbl , data.table("QTL server URL" = qtl.server))
 
     if(build == 'grch38')
       project_info_tbl = cbind(project_info_tbl , data.table("GTEx version" = gtex.datasetId))
   }
 
   if(!is.null(string.server))
+  {
     .SNPannotator$PingSTRING <- PingSTRING(string.server)
+    project_info_tbl = cbind(project_info_tbl , data.table("STRING server URL" = string.server))
+
+  }
 
 
 
@@ -837,12 +845,6 @@ run_annotation <- function(configurationFilePath, verbose = TRUE) {
     appendXLSXfile(eqtl.output,thisSheetName = 'eQTL',fileName = output.xlsx.file, addFirst = FALSE)
     output_list <- c(output_list,list('eQTL'= eqtl.output))
 
-  }
-
-
-  # save excel file - eQTL report
-  if(!is.null(eqtl.output) && nrow(eqtl.output) > 0)
-  {
     appendXLSX_qtl_report(eqtl.output,'eQTL report',  eqtl.cluster.report , output.xlsx.file)
   }
 
@@ -856,12 +858,6 @@ run_annotation <- function(configurationFilePath, verbose = TRUE) {
     appendXLSXfile(sqtl.output,thisSheetName = 'sQTL',fileName = output.xlsx.file, addFirst = FALSE)
     output_list <- c(output_list,list('sQTL'= sqtl.output))
 
-  }
-
-
-  # save excel file - sQTL report
-  if(!is.null(sqtl.output) && nrow(sqtl.output) > 0)
-  {
     appendXLSX_qtl_report(sqtl.output,'sQTL report',  sqtl.cluster.report , output.xlsx.file)
   }
 
